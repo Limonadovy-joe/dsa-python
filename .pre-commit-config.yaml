@@ -1,0 +1,59 @@
+# Run by prek (https://prek.j178.dev), a drop-in replacement for pre-commit.
+#   uv run prek install            # once per clone: installs both git hooks below
+#   uv run prek run --all-files    # the pre-commit stage by hand (what CI runs)
+#
+# Every hook goes through `uv run --locked`, so the tool versions are the ones
+# pinned in uv.lock, the same as in CI and in `uv run ...` at the terminal. The
+# hook fails if pyproject.toml changed but uv.lock wasn't re-locked and staged.
+
+default_install_hook_types: [pre-commit, pre-push]
+default_stages: [pre-commit]
+
+repos:
+  - repo: local
+    hooks:
+      # --- pre-commit: lint, format, type-check ---------------------------------
+      # Lint runs before format: `--fix` can leave code the formatter must tidy.
+      # require_serial: ruff parallelises itself; concurrent batches race on its
+      # cache (os error 5 on Windows).
+      - id: ruff-check
+        name: ruff check
+        entry: uv run --locked ruff check --fix --force-exclude
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+      - id: ruff-format
+        name: ruff format
+        entry: uv run --locked ruff format --force-exclude
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+      # Strict mode needs the whole program, so mypy gets its file list from
+      # [tool.mypy] instead of from the staged files.
+      - id: mypy
+        name: mypy --strict
+        entry: uv run --locked mypy
+        language: system
+        pass_filenames: false
+        files: &code ^(dsa/|tests/|pyproject\.toml$|uv\.lock$)
+
+      # --- pre-push: unit tests, then integration tests -------------------------
+      - id: unit-tests
+        name: unit tests
+        entry: uv run --locked pytest
+        args: [-m, not integration and not performance]
+        language: system
+        pass_filenames: false
+        files: *code
+        stages: [pre-push]
+
+      - id: integration-tests
+        name: integration tests
+        entry: uv run --locked pytest
+        args: [-m, integration, --allow-no-tests]
+        language: system
+        pass_filenames: false
+        files: *code
+        stages: [pre-push]

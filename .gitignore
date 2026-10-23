@@ -1,0 +1,28 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+dist/
+build/
+*.egg-info/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.linear/config.md
+
+# IDE
+.idea/
+
+# Claude Code user-local config
+.claude/settings.local.json
+
+# MCP server config (local IDE port)
+.mcp.json
+
+# Secrets and credentials
+.env
+.env.*
+secrets/
