@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+# Least privilege: nothing here writes to the repo.
+permissions:
+  contents: read
+
+# A newer push to a PR supersedes its running build; builds of master always finish.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  FORCE_COLOR: "1"
+  # Every uv command asserts uv.lock is current instead of silently re-locking.
+  UV_LOCKED: "1"
+  # Interpreters come from uv, never from whatever the runner image ships.
+  UV_PYTHON_PREFERENCE: only-managed
+
+defaults:
+  run:
+    shell: bash # identical quoting on Windows, Linux and macOS
+
+jobs:
+  checks:
+    name: Lint, format, type-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          python-version: "3.13"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      - run: uv sync
+      # The local pre-commit stage, over every tracked file rather than a diff.
+      - run: uv run prek run --all-files --show-diff-on-failure
+
+  tests:
+    name: Tests (${{ matrix.os }}, Python ${{ matrix.python-version }})
+    needs: checks
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+      # A fresh .venv per job, built only from uv.lock.
+      - run: uv sync
+
+      # Same selections as the pre-push hooks, measured into one coverage file.
+      - name: Unit tests
+        run: uv run coverage run -m pytest -m "not integration and not performance"
+      - name: Integration tests
+        run: uv run coverage run --append -m pytest -m integration --allow-no-tests
+
+      # The threshold lives in [tool.coverage.report] fail_under.
+      - name: Coverage gate
+        run: |
+          uv run coverage report --format=markdown --fail-under=0 >> "$GITHUB_STEP_SUMMARY"
+          uv run coverage report
