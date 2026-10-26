@@ -18,10 +18,13 @@ These rules are **always active** during the entire workflow:
 
 ## Steps
 
-### 1. Fetch the issue
+### 1. Get the issue context
 
-Use `get_issue` with the issue identifier (e.g., DSA-9). Read the description
-to understand the spec, acceptance criteria, and labels.
+- If the issue was **just created in this conversation** and the full spec
+  (title, description, labels, acceptance criteria) is already in context,
+  skip the API call and use that data directly.
+- Otherwise, use `get_issue` with the issue identifier (e.g., DSA-9). Read
+  the description to understand the spec, acceptance criteria, and labels.
 
 ### 2. Move to In Progress
 
