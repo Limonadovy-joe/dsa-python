@@ -147,7 +147,28 @@ uv run ruff format . && uv run ruff check . && uv run mypy && uv run pytest
 
 ---
 
-## 6 - Report
+## 6 - Pull Request
+
+After pushing, create a PR targeting `main`:
+
+```bash
+gh pr create --title "<type>(<scope>): <description>" --body "$(cat <<'EOF'
+## Summary
+<1-3 bullet points explaining the change>
+
+## Test plan
+- [ ] All four gates pass (`ruff format`, `ruff check`, `mypy`, `pytest`)
+EOF
+)"
+```
+
+- **Title**: follows the same conventional-commit format as the primary commit.
+- **Body**: brief summary + test plan checklist.
+- If a PR already exists for this branch, skip this step.
+
+---
+
+## 7 - Report
 
 Keep it short:
 
@@ -157,6 +178,7 @@ Committed  <sha> <subject>
 Gate       passed
 Pulled     <N> commits (<conflicts resolved: N files | no conflicts>)
 Pushed     <N> commits to <remote>/<branch>
+PR         <url>
 Left out   <path> — <why>
 ```
 
