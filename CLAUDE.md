@@ -20,6 +20,8 @@ Read these before working in the repo:
 - Public API is the topic package: `from dsa.arrays import DynamicArray`.
 - Don't reach for `heapq`, `bisect`, or `collections` inside `dsa/` — implementing
   them is the exercise. They're fine in tests as an oracle.
+- **No `Co-Authored-By` trailers.** Never add a co-author line (e.g. Claude Code)
+  to commit messages.
 
 ## Linear
 
