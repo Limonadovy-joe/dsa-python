@@ -84,7 +84,8 @@ Refs: DSA-<number>
 - **scope** (recommended): the topic area (`arrays`, `linked-list`, `deque`, `ci`, etc.)
 - **description** (required): imperative mood, lowercase start
 - **body** (optional): why, not what — only when non-trivial
-- **footer**: always include `Refs: DSA-<number>` linking back to the issue
+- **footer**: always include `Refs: DSA-<number>` linking back to the issue.
+  **Never** add a `Co-Authored-By` trailer.
 
 Use a HEREDOC for multi-line messages:
 

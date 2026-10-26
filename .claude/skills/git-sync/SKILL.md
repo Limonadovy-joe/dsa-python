@@ -73,6 +73,7 @@ Follow the **Conventional Commits** spec as documented in
 - **body** (optional): why, not what — only when non-trivial
 - **footer** (optional): `BREAKING CHANGE:` or issue refs (e.g. `Refs: DSA-11`).
   Omit the `Refs:` footer on `chore/` branches that have no ticket.
+  **Never** add a `Co-Authored-By` trailer.
 
 Use a HEREDOC for multi-line messages:
 

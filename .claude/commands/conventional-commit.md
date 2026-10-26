@@ -92,6 +92,7 @@ no ticket.
 4. Write a concise **description** in imperative mood.
 5. Add a **body** only if the change is non-trivial and needs explanation.
 6. Add a **footer** only for breaking changes or issue references.
+   **Never** add a `Co-Authored-By` trailer.
 7. Use a HEREDOC for multi-line messages:
 
 ```bash
