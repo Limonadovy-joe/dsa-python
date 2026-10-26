@@ -141,7 +141,28 @@ uv run ruff format . && uv run ruff check . && uv run mypy && uv run pytest
 3. **NEVER** `--force` or `--force-with-lease`.
 4. Push rejected as non-fast-forward: go back to Pull **once**. Rejected again: **stop**.
 
-### 9. Wrap up
+### 9. Pull Request
+
+After pushing, create a PR targeting `main`:
+
+```bash
+gh pr create --title "<type>(<scope>): <description>" --body "$(cat <<'EOF'
+## Summary
+<1-3 bullet points explaining the change>
+
+Refs: DSA-<number>
+
+## Test plan
+- [ ] All four gates pass (`ruff format`, `ruff check`, `mypy`, `pytest`)
+EOF
+)"
+```
+
+- **Title**: follows the same conventional-commit format as the primary commit.
+- **Body**: brief summary, issue reference, and test plan checklist.
+- If a PR already exists for this branch, skip this step.
+
+### 10. Wrap up
 
 - **Never move to Done** — leave in In Progress. Only the human moves issues to Done.
 - Post a short report:
@@ -154,6 +175,7 @@ Committed  <sha> <subject>
 Gate       passed
 Pulled     <N> commits (<conflicts resolved: N files | no conflicts>)
 Pushed     <N> commits to <remote>/<branch>
+PR         <url>
 Left out   <path> — <why>
 ```
 
