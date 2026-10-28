@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -10,7 +10,7 @@ on:
 permissions:
   contents: read
 
-# A newer push to a PR supersedes its running build; builds of master always finish.
+# A newer push to a PR supersedes its running build; builds of main always finish.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}

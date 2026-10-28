@@ -75,7 +75,7 @@ uv run ruff format . && uv run ruff check . && uv run mypy && uv run pytest
 
 ## CI
 
-`.github/workflows/ci.yml` runs on pushes to `master`, on PRs, and by hand:
+`.github/workflows/ci.yml` runs on pushes to `main`, on PRs, and by hand:
 
 1. **checks**: `prek run --all-files`, the same hooks as pre-commit.
 2. **tests**, after checks pass, on {Ubuntu, Windows, macOS} × Python {3.13, 3.14}:
