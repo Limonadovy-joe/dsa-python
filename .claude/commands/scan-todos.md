@@ -1,79 +1,62 @@
 # scan-todos
 
-Scan for TODO/FIXME/HACK/XXX comments in the codebase, group them into
-actionable tickets, and propose Linear issues for user approval.
+Turn TODO/FIXME/HACK/XXX comments into Linear tickets: the whole codebase, a
+file, or one TODO section.
 
 ## When to use
 
-When the user wants to triage accumulated TODOs into Linear tickets, or to
-audit what technical debt markers exist in the codebase.
+- `/scan-todos` — triage every TODO in `dsa/` and `tests/`.
+- `/scan-todos <path | file:line | file:start-end>` — triage one file or section.
+- Plain requests too: "create a ticket from the TODO at linked_list.py:61",
+  "ticket the TODOs in doubly_linked_list.py".
 
 ## Workflow
 
-### 1 - Scan
-
-Grep for `TODO|FIXME|HACK|XXX` across `dsa/` and `tests/`:
-
-```bash
-grep -rn "TODO\|FIXME\|HACK\|XXX" dsa/ tests/
+```
+todo-scanner agent  →  main session: approval  →  linear-ticket-creator agent  →  main session: write-back
+ (triage the scope)      (user edits the table)      (dedupe, create, report)      (TODO → TODO(DSA-n))
 ```
 
-For each hit, read the surrounding context (+/- 3 lines) to understand
-the intent.
+Agents live in `.claude/agents/`. Format and triage rules live in the
+`todo-format` skill; label, template and milestone rules in `linear-ticket`.
 
-### 2 - Group
+### 1 - Triage (agent)
 
-Related TODOs become a single ticket. Group by:
-- Same design question or decision (e.g. naming conventions across files)
-- Same refactoring pattern (e.g. "extract helper" in multiple places)
-- Same file region (adjacent TODOs about one method)
+Launch `todo-scanner` (Agent tool, `subagent_type: todo-scanner`) with the
+scope: the paths, `file:line` or range the user gave, else `dsa/` and `tests/`.
+For "this TODO" without a location, resolve it from the conversation (the file
+the user has open or just mentioned) before launching; if you can't, ask.
 
-A single TODO that stands alone is its own group.
+### 2 - Approval
 
-### 3 - Propose
+- **Full or multi-ticket scan:** show the proposal table plus the
+  already-tracked, mismatch and unclear lists. Wait for explicit approval. The
+  user may drop, merge or split rows, or change labels, priority, milestone,
+  template or title; apply the edits to the specs yourself.
+- **Targeted request that yields one ticket** ("create a ticket from this
+  TODO"): the request is the approval. Show the one-line proposal and go on,
+  unless the TODO is already tracked or unclear — then report that and stop.
 
-Present a table to the user with one row per proposed ticket:
+### 3 - Create (agent)
 
-| # | Title | TODOs (file:line) | Template | Type label | Agent label |
+Launch `linear-ticket-creator` **once** with all approved specs. State Backlog
+unless the user said otherwise.
+
+### 4 - Write-back
+
+For each created issue, rewrite its TODO blocks to `TODO(DSA-<n>):` plus the
+ticket's labels line (Write-back in `todo-format`). Comment lines only. Do the
+same for TODOs the scanner reported as covered by an existing open issue. These
+are `dsa/`/`tests/` edits: leave them unstaged for the user's ticket branch.
+
+### 5 - Report
+
+| # | Result | Issue | Title | Labels | TODOs rewritten |
 |---|---|---|---|---|---|
 
-For each ticket, include:
-- **Title**: clear, actionable summary
-- **TODOs**: the file:line references that this ticket covers
-- **Template**: which `.linear/templates/` template to use
-- **Type label**: from the Type label group (Implementation, Refactor, Analysis, Tooling, etc.)
-- **Agent label**: `agent-ready` if spec is clear, `needs-human` if it requires judgment
-- **Suggested additional labels**: Area, Component, Priority, Milestone
-
-### 4 - Wait for approval
-
-Do NOT create any tickets until the user explicitly approves.
-The user may:
-- Approve all as-is
-- Remove groups they don't want ticketed
-- Merge or split groups
-- Change labels, priority, or template
-- Edit titles
-
-### 5 - Create tickets
-
-For each approved group, use `/linear-ticket` to create the issue with:
-- The agreed title and description
-- All file:line references in the description body
-- The chosen template, labels, and priority
-- State: Backlog (unless user specifies otherwise)
-
-### 6 - Report
-
-After creation, print a summary table:
-
-| # | Issue ID | Title | Labels |
-|---|---|---|---|
+Include skipped duplicates, defaults the creator chose, and errors.
 
 ## Notes
 
-- This command only scans `dsa/` and `tests/`. To scan other directories,
-  the user should specify them explicitly.
-- TODOs that are part of the design (e.g. "TODO: implement in phase 2" with a
-  ticket already linked) should be noted but not re-ticketed.
-- If a TODO already references a DSA-number, skip it — it is already tracked.
+- Neither agent can ask the user anything; all questions happen in the main session.
+- TODOs in `scripts/` or `utils/` are only scanned when the user names them.

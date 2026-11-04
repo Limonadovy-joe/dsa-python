@@ -71,6 +71,12 @@ head-to-head (see `docs/performance-testing.md`).
 - Test fixtures parametrize over a `BACKENDS` dict that maps name → factory
   (see `tests/<topic>/conftest.py`).
 
+## TODO comments
+
+A TODO names its Linear ticket and carries its labels: `# TODO(DSA-27): summary`
+then `#   [Type | Area | Component | Agent]`. The source of truth for the format is
+`.claude/skills/todo-format/SKILL.md`.
+
 ## Branch naming
 
 Branches tie the conventional commit **type** to the Linear issue:

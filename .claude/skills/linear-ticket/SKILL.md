@@ -19,7 +19,7 @@ When the user asks to create an issue/ticket in Linear for the DSA project.
 3. Read the template, fill it in with details from the user's request.
 4. Choose labels:
    - **Type:** exactly one (from step 1)
-   - **Area:** one if applicable (Arrays, Linked Lists, Stacks/Queues, Trees, Graphs, Heaps, Hashing, Sorting/Searching, Dynamic Programming, Greedy, Backtracking)
+   - **Area:** one if applicable (Arrays, Linked Lists, Stacks, Queues, Trees, Graphs, Heaps, Hashing, Sorting/Searching, Dynamic Programming, Greedy, Backtracking)
    - **Component:** one (Core, Tests, Benchmarks, Notebooks, Report, Infra)
    - **Agent:** `agent-ready` if spec is complete and mechanical; `needs-human` if it requires judgment
    - **Flag:** only if needed (Blocked, Needs-supervisor, Reproducibility)
