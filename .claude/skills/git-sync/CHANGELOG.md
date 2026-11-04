@@ -41,7 +41,9 @@ existing conventions.
 ## How it fits with other skills
 
 ```
-linear-ticket   — creates the issue in Linear
+linear-ticket   — rules for creating an issue in Linear (preloaded by the agents)
+linear-ticket-creator (agent) — creates issues from a prompt or approved TODO groups
+scan-todos      — todo-scanner agent → user approval → linear-ticket-creator agent
 linear-work     — picks up an issue, creates the branch, does the work
 conventional-commit — formats a single commit message
 git-sync        — commits, gates, pulls, pushes (calls conventional-commit format)
