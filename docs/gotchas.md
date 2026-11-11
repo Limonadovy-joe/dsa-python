@@ -42,3 +42,26 @@
   nodes get processed twice.
 - DP: write the recurrence and base case in a comment before the loop. The loop
   order has to follow the dependency direction.
+
+## Comparator (`utils/comparator`)
+
+`Comparator.default_compare` is what `LinkedList`, `DoublyLinkedList` and
+`Deque` use for `find`/`delete` when no `compare_fun` is passed.
+
+- NaN is equal to NaN and greater than every other `int`/`float`/`bool`,
+  including `+inf`. So `find(float("nan"))` finds a NaN node, unlike plain `==`.
+- `bool` is a number: `(True, 1)` → `0`, `(False, 0.5)` → `-1`, but
+  `(True, "1")` raises.
+- Primitives from different families (numbers / `str` / `bytes` / `None`) raise
+  `TypeError` naming both types, even where plain `==` would just say `False`:
+  `(None, 0)`, `("a", b"a")`, `("1", 1)`. A list holding mixed `str` and `int`
+  raises on `find`/`delete` with the default comparator.
+- Anything else (lists, tuples, sets, custom objects, and numeric types outside
+  `int`/`float`/`bool` such as `Fraction` or `Decimal`) goes through `==`, then
+  `<`, then `>`. An unequal pair Python refuses to order (two `object()`s, a
+  list and a tuple) raises `TypeError`.
+- Partial orders: unequal values where neither `<` nor `>` holds (disjoint
+  sets, `[nan]` vs another `[nan]`, `nan` vs `Fraction(1, 2)`) get an arbitrary
+  but antisymmetric nonzero order by `id`. `equal` is correctly `False`, but
+  never sort by `compare` on such values: the order is meaningless and only
+  stable while both objects are alive.
