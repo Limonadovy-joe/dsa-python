@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import re
+from dataclasses import dataclass
 from pathlib import Path
 
 
@@ -71,7 +72,8 @@ def _module_file(class_name: str) -> str:
 
 def _backends(tests_dotted: str, import_path: str, name: str, class_name: str) -> str:
     return (
-        f'"""{class_name} backends under test, shared by unit, integration and performance tests."""\n'
+        f'"""{class_name} backends under test, '
+        'shared by unit, integration and performance tests."""\n'
         "\n"
         "from __future__ import annotations\n"
         "\n"
@@ -89,7 +91,8 @@ def _backends(tests_dotted: str, import_path: str, name: str, class_name: str) -
         f"    def __call__[T](self, values: Iterable[T] = ()) -> {class_name}[T]: ...\n"
         "\n"
         "\n"
-        f"# def _fill[T]({name}: {class_name}[T], values: Iterable[T]) -> {class_name}[T]:\n"
+        f"# def _fill[T]({name}: {class_name}[T], values: Iterable[T])"
+        f" -> {class_name}[T]:\n"
         f"#     for value in values:\n"
         f"#         {name}.<method>(value)\n"
         f"#     return {name}\n"
@@ -149,6 +152,10 @@ def _import_path(src: str, name: str) -> str:
 
 
 def create_module(root: Path, src: str, name: str) -> None:
+    """Create ``<root>/<src>/<name>/`` with ``__init__.py`` and ``<name>.py``.
+
+    Existing files are left untouched.
+    """
     class_name = _snake_to_pascal(name)
     src_dir = root / src / name
     pkg_path = _import_path(src, name)
@@ -157,15 +164,27 @@ def create_module(root: Path, src: str, name: str) -> None:
     _write_if_missing(src_dir / f"{name}.py", _module_file(class_name))
 
 
+@dataclass(frozen=True)
+class TestKinds:
+    """Which test folders ``create_tests`` scaffolds. All of them by default."""
+
+    unit: bool = True
+    integration: bool = True
+    perf: bool = True
+
+
 def create_tests(
     root: Path,
     src: str,
     name: str,
-    *,
-    unit: bool = True,
-    integration: bool = True,
-    perf: bool = True,
+    kinds: TestKinds | None = None,
 ) -> None:
+    """Create ``<root>/tests/<name>/`` with backends, conftest and test folders.
+
+    ``kinds`` picks the unit, integration and perf folders; ``None`` means all
+    three. Existing files are left untouched.
+    """
+    kinds = kinds or TestKinds()
     class_name = _snake_to_pascal(name)
     pkg_path = _import_path(src, name)
     test_dir = root / "tests" / name
@@ -181,15 +200,15 @@ def create_tests(
         test_dir / "conftest.py",
         _conftest(tests_dotted, name, class_name),
     )
-    if unit:
+    if kinds.unit:
         _write_if_missing(test_dir / "unit" / "__init__.py", "")
         _write_if_missing(
             test_dir / "unit" / f"test_{name}.py",
             _test_file(pkg_path, name, class_name),
         )
-    if integration:
+    if kinds.integration:
         _write_if_missing(test_dir / "integration" / "__init__.py", "")
-    if perf:
+    if kinds.perf:
         _write_if_missing(test_dir / "perf" / "__init__.py", "")
 
 
@@ -201,6 +220,7 @@ _COMMAND_RE = re.compile(r"^create-([a-z][a-z0-9_]*)(?:-(module|tests))?$")
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Parse ``create-<type>[-(module|tests)]`` and scaffold it; return 0."""
     parser = argparse.ArgumentParser(
         description="Scaffold a new DSA module and/or its tests.",
     )
@@ -245,18 +265,18 @@ def main(argv: list[str] | None = None) -> int:
 
     # If none of -u/-i/-p given, default to all three.
     any_flag = args.u or args.i or args.p
-    unit = args.u or not any_flag
-    integration = args.i or not any_flag
-    perf = args.p or not any_flag
+    kinds = TestKinds(
+        unit=args.u or not any_flag,
+        integration=args.i or not any_flag,
+        perf=args.p or not any_flag,
+    )
 
     if scope is None or scope == "module":
         print(f"[module] {name}")
         create_module(args.root, args.src, name)
     if scope is None or scope == "tests":
         print(f"[tests]  {name}")
-        create_tests(
-            args.root, args.src, name, unit=unit, integration=integration, perf=perf
-        )
+        create_tests(args.root, args.src, name, kinds)
 
     return 0
 
