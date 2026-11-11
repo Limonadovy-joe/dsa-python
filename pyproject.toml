@@ -28,6 +28,9 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q -m 'not performance'"
+# Baseline for known-failing tests (docs/baseline.md): an xfail that starts
+# passing fails the run, so the marker gets removed.
+xfail_strict = true
 markers = [
     "integration: crosses module boundaries",
     "performance: timing-based and slow; run with `uv run pytest -m performance`"]
@@ -54,9 +57,7 @@ select = [
     "TC", # type-checking imports
 ]
 ignore = [
-    "D100", # module docstring not required everywhere
-    "D104", # package docstring not required
-    "D107", # __init__ documented on the class
+    "D1",   # docstrings are optional everywhere (docs/conventions.md); D2/D4 still style the ones written
     "D203", # conflicts with D211
     "D213", # conflicts with D212
 ]

@@ -38,12 +38,6 @@ def _module_init(import_path: str, name: str, class_name: str) -> str:
 
 def _module_file(class_name: str) -> str:
     return (
-        f'"""{class_name}.\n'
-        "\n"
-        "Complexity:\n"
-        "    TODO — document time/space for the main operations.\n"
-        '"""\n'
-        "\n"
         "from __future__ import annotations\n"
         "\n"
         "from typing import TYPE_CHECKING, Generic, Optional, Protocol, TypeVar\n"
