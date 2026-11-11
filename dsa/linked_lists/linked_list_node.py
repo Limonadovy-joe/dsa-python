@@ -1,17 +1,18 @@
-from __future__ import annotations  # noqa: I001
+from __future__ import annotations
 
-from typing import Optional, Callable, TypeVar  # noqa: UP035
+from typing import TYPE_CHECKING
 
-T = TypeVar("T")
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class LinkedListNode[T]:
     """A node in a singly linked list."""
 
     value: T
-    next: Optional[LinkedListNode[T]]  # noqa: UP045
+    next: LinkedListNode[T] | None
 
-    def __init__(self, value: T, next: Optional[LinkedListNode[T]] = None) -> None:  # noqa: UP045
+    def __init__(self, value: T, next: LinkedListNode[T] | None = None) -> None:
         self.value = value
         self.next = next
 
@@ -21,7 +22,7 @@ class LinkedListNode[T]:
     def __repr__(self) -> str:
         return f"LinkedListNode(value='{self.value}'"
 
-    def to_string(self, callback: Optional[Callable[[T], str]] = None) -> str:  # noqa: UP045
+    def to_string(self, callback: Callable[[T], str] | None = None) -> str:
         if callback is not None:
             return callback(self.value)
         return str(self)

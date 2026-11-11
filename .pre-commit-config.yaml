@@ -32,19 +32,12 @@ repos:
 
       # Strict mode needs the whole program, so mypy gets its file list from
       # [tool.mypy] instead of from the staged files.
-      #
-      # TEMPORARY BASELINE (docs/baseline.md): mypy-baseline drops the errors
-      # recorded in mypy-baseline.txt and fails only on new ones, or on fixed
-      # ones until `uv run mypy | uv run mypy-baseline sync` shrinks the file.
-      # When the baseline is empty, go back to `entry: uv run --locked mypy`.
       - id: mypy
-        name: mypy --strict (baseline)
-        entry: >-
-          bash -c 'uv run --locked mypy | uv run --locked mypy-baseline filter
-          --no-colors --hide-stats'
+        name: mypy --strict
+        entry: uv run --locked mypy
         language: system
         pass_filenames: false
-        files: &code ^(dsa/|tests/|pyproject\.toml$|uv\.lock$|mypy-baseline\.txt$)
+        files: &code ^(dsa/|tests/|pyproject\.toml$|uv\.lock$)
 
       # --- pre-push: unit tests, then integration tests -------------------------
       - id: unit-tests

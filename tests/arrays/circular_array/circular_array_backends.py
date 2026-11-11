@@ -1,4 +1,4 @@
-"""CircularArray backends under test, shared by unit, integration and performance tests."""  # noqa: E501
+"""CircularArray backends, shared by unit, integration and performance tests."""
 
 from __future__ import annotations
 
