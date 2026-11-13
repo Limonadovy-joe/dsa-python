@@ -35,6 +35,7 @@
   out-of-range index, and the error path (`pytest.raises`).
 - Test names describe the behaviour: `test_pop_returns_and_shrinks`.
 - New code lands with its test in the same change. `uv run pytest` must be green.
+- Each acceptance criterion of the ticket has at least one test.
 - Tests that cross module boundaries go in an `integration/` folder and set
   `pytestmark = pytest.mark.integration` (like `performance/` does), so the
   pre-push hook and CI run them as their own stage after the unit tests.
@@ -71,6 +72,15 @@ head-to-head (see `docs/performance-testing.md`).
 - The main class never knows which adapter it holds — only the protocol.
 - Test fixtures parametrize over a `BACKENDS` dict that maps name → factory
   (see `tests/<topic>/conftest.py`).
+
+## Acceptance criteria and Definition of Done
+
+Every Linear ticket carries `## Acceptance criteria` (what this ticket must
+achieve, each item observable and testable) and the `## Definition of done`
+checklist (what every ticket of its kind must meet: tests per criterion, CI
+green, gotchas, TODOs resolved, conventional commit with
+`Refs: DSA-<n>`, merged to `main`). Rules and the full checklists:
+`docs/definition-of-done.md`. The templates in `.linear/templates/` contain both.
 
 ## TODO comments
 
