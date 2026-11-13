@@ -60,5 +60,7 @@ file for IDs.
 |---|---|
 | Full gate | `uv run ruff format . && uv run ruff check . && uv run mypy && uv run pytest` |
 | Run benchmarks | `uv run pytest benchmarks/` (once harness is set up) |
-| Results directory | `results/` |
-| Report directory | `report/` |
+| Results directory | `results/<structure>/data/` (measurements), `results/<structure>/report/` (text + graphs) |
+| Scaffold performance research | `/perf-research <structure>` (agent) or `uv run python scripts/perf_research.py init <structure>` |
+| Refresh measured tables from data | `uv run python scripts/perf_research.py tables <structure>` |
+| Report directory (cross-structure) | `report/` |
