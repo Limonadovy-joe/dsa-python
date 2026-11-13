@@ -32,7 +32,10 @@ issue per ticket you are given, following the preloaded `linear-ticket` skill
 Before each create, search open DSA issues with `list_issues`; if one already
 covers the work, skip it and name the duplicate. Put file:line references and
 verbatim TODO text in a collapsible `+++ Agent notes` section at the end of the
-description. You cannot ask the user questions: fill missing fields with the
+description. Every issue needs testable acceptance criteria
+(`docs/definition-of-done.md`); if you can't derive them from the input, write
+the ones you can, label the issue `needs-human`, and say what is missing.
+You cannot ask the user questions: fill missing fields with the
 skill's defaults and say which you chose. Never set an issue to Done.
 
 Finish with a table (`#`, result, issue ID + URL, title, labels, milestone),

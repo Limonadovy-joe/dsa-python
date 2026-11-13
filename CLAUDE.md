@@ -9,6 +9,7 @@ Read these before working in the repo:
 - @docs/architecture.md — package layout and the uv commands
 - @docs/conventions.md — how a solution and its test must be written
 - @docs/gotchas.md — Python and DSA pitfalls, plus repo quirks
+- @docs/definition-of-done.md — acceptance criteria rules and the Definition of Done
 
 ## Ground rules
 
@@ -42,9 +43,15 @@ file for IDs.
 ### Workflow rules
 
 - Agents **never** set an issue to Done — only the human does.
+- **Every ticket has `## Acceptance criteria`**: ticket-specific, testable, one
+  test per criterion for code. A ticket is done when all AC are met **and** the
+  Definition of Done checklist is ticked. Both: `docs/definition-of-done.md`.
 - `agent-ready` means the spec is clear enough for an agent to implement.
 - `needs-human` means the issue requires human judgment (proofs, design, writing voice).
 - When an agent finishes work, it moves the issue to In Progress (no In Review state yet).
+- `/linear-work` orchestrates code changes: `dsa-implementer` writes, `dsa-reviewer`
+  reviews, messages pass through `.handoff/DSA-<n>/` (gitignored) until
+  `VERDICT: approve`. Contract: `docs/agent-handoff.md`.
 - Issue templates live in `.linear/templates/` — agents use them when creating issues.
 
 ### Project commands
@@ -53,5 +60,7 @@ file for IDs.
 |---|---|
 | Full gate | `uv run ruff format . && uv run ruff check . && uv run mypy && uv run pytest` |
 | Run benchmarks | `uv run pytest benchmarks/` (once harness is set up) |
-| Results directory | `results/` |
-| Report directory | `report/` |
+| Results directory | `results/<structure>/data/` (measurements), `results/<structure>/report/` (text + graphs) |
+| Scaffold performance research | `/perf-research <structure>` (agent) or `uv run python scripts/perf_research.py init <structure>` |
+| Refresh measured tables from data | `uv run python scripts/perf_research.py tables <structure>` |
+| Report directory (cross-structure) | `report/` |

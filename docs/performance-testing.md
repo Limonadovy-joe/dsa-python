@@ -151,7 +151,11 @@ This works on CI shared runners where timings are noisy.
 ## Collecting data for plotting
 
 For visualization you need a **data-collection script**, not a pytest test.
-Put it in `scripts/` so it doesn't run in CI.
+Put it in `scripts/` so it doesn't run in CI. It writes into
+`results/<structure>/data/` using the CSV contract in
+`docs/performance-research.md`. With that contract,
+`scripts/perf_research.py tables <structure>` can fill the measured tables of
+the research doc.
 
 ```python
 # scripts/bench_queue.py
@@ -161,25 +165,38 @@ from __future__ import annotations
 
 import csv
 import time
+from datetime import UTC, datetime
 from pathlib import Path
 
 # reuse the same backends as the test suite
 from tests.queues.queue.queue_backends import BACKENDS
 
-SIZES = [100, 500, 1_000, 2_500, 5_000, 10_000, 25_000, 50_000]
+SIZES = [1_000, 2_000, 4_000, 8_000, 16_000, 32_000]  # geometric: ratios need it
 TRIALS = 5
-OUT = Path("docs/benchmarks/queue_dequeue.csv")
+RUN_ID = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+OUT = Path(f"results/queue/data/{RUN_ID}.csv")
 
 
-def bench_drain(name: str, make_queue, size: int) -> dict:  # noqa: ANN001
-    best = float("inf")
-    for _ in range(TRIALS):
+def bench_drain(name: str, make_queue, size: int) -> list[dict]:  # noqa: ANN001
+    rows = []
+    for trial in range(TRIALS):  # one row per trial; statistics come later
         q = make_queue(range(size))
         start = time.perf_counter()
-        while not q.is_empty():
+        for _ in range(size):
             q.dequeue()
-        best = min(best, time.perf_counter() - start)
-    return {"backend": name, "n": size, "seconds": best}
+        rows.append(
+            {
+                "run_id": RUN_ID,
+                "backend": name,
+                "operation": "dequeue",
+                "n": size,
+                "trial": trial,
+                "metric": "seconds",
+                "value": time.perf_counter() - start,
+                "ops": size,  # per call = value / ops
+            }
+        )
+    return rows
 
 
 def main() -> None:
@@ -187,11 +204,11 @@ def main() -> None:
     rows: list[dict] = []
     for name, factory in BACKENDS.items():
         for size in SIZES:
-            rows.append(bench_drain(name, factory, size))
-            print(f"{name:>15}  n={size:>6}  {rows[-1]['seconds']:.6f}s")
+            rows += bench_drain(name, factory, size)
+            print(f"{name:>15}  n={size:>6}  {rows[-1]['value']:.6f}s")
 
     with OUT.open("w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["backend", "n", "seconds"])
+        w = csv.DictWriter(f, fieldnames=list(rows[0]))
         w.writeheader()
         w.writerows(rows)
     print(f"\nSaved → {OUT}")
@@ -217,17 +234,19 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 
-CSV = Path("docs/benchmarks/queue_dequeue.csv")
-OUT_DIR = Path("docs/benchmarks")
+DATA_DIR = Path("results/queue/data")
+OUT_DIR = Path("results/queue/report")
 
 
 def main() -> None:
-    df = pd.read_csv(CSV)
+    csv = max(DATA_DIR.glob("*.csv"))  # newest run_id
+    df = pd.read_csv(csv)
+    df = df[(df.operation == "dequeue") & (df.metric == "seconds")]
 
     sns.set_theme(style="whitegrid")
     fig, ax = plt.subplots(figsize=(8, 5))
 
-    sns.lineplot(data=df, x="n", y="seconds", hue="backend", marker="o", ax=ax)
+    sns.lineplot(data=df, x="n", y="value", hue="backend", marker="o", ax=ax)
 
     ax.set_title("Queue.dequeue() — time vs input size")
     ax.set_xlabel("n (number of items)")
@@ -337,6 +356,10 @@ gives O(n). Ring buffers avoid shifting entirely.
 1. **Write the perf test** in `tests/<topic>/perf/` using the existing
    `make_<topic>` fixture. Assert on growth ratios, not absolute times.
 2. **Collect data** with a script in `scripts/` that imports `BACKENDS`
-   and writes CSV.
-3. **Plot** with a companion script using seaborn/matplotlib.
-4. Keep plots in `docs/benchmarks/` for reference.
+   and writes CSV to `results/<structure>/data/`.
+3. **Plot** with a companion script using seaborn/matplotlib into
+   `results/<structure>/report/`.
+4. **Write it up** in `results/<structure>/report/<structure>.md`
+   (`/perf-research <structure>` scaffolds it;
+   `uv run python scripts/perf_research.py tables <structure>` fills the
+   measured tables). See `docs/performance-research.md`.

@@ -51,6 +51,9 @@ from dsa.arrays.dynamic_array import DynamicArray  # works, but not the public p
 | Run the pre-push hooks by hand | `uv run prek run --all-files --stage pre-push` |
 | Retest (failed → new → rest) | `uv run python scripts/retest.py` |
 | Tests with the coverage gate | `uv run coverage run -m pytest && uv run coverage report` |
+| List structures for performance research | `uv run python scripts/perf_research.py list` |
+| Scaffold `results/<s>/` + research doc | `uv run python scripts/perf_research.py init <s>` |
+| Refresh the research doc tables from `results/<s>/data/` | `uv run python scripts/perf_research.py tables <s>` |
 
 The full gate before calling a change done:
 

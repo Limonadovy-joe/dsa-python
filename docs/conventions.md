@@ -6,8 +6,9 @@
   the thing, not the problem (`dynamic_array.py`, not `leetcode_1046.py`).
 - Export the public names from the topic's `__init__.py` and list them in
   `__all__`. Anything not exported is private to the module.
-- Module docstring says what it is; class/function docstring states **complexity**
-  (time and space) for the main operations. That line is the point of the repo.
+- Docstrings are optional, on modules, classes and methods alike, public or
+  private. Write one only when it adds something the name and signature don't.
+  Complexity targets live in the ticket's acceptance criteria, not in docstrings.
 - Prefix helpers with `_`. No module-level mutable state, no printing, no input.
 - Fully annotated, `mypy --strict` clean. No bare `Any` in a public signature —
   if a container holds arbitrary elements it is **generic**, using PEP 695
@@ -34,6 +35,7 @@
   out-of-range index, and the error path (`pytest.raises`).
 - Test names describe the behaviour: `test_pop_returns_and_shrinks`.
 - New code lands with its test in the same change. `uv run pytest` must be green.
+- Each acceptance criterion of the ticket has at least one test.
 - Tests that cross module boundaries go in an `integration/` folder and set
   `pytestmark = pytest.mark.integration` (like `performance/` does), so the
   pre-push hook and CI run them as their own stage after the unit tests.
@@ -70,6 +72,15 @@ head-to-head (see `docs/performance-testing.md`).
 - The main class never knows which adapter it holds — only the protocol.
 - Test fixtures parametrize over a `BACKENDS` dict that maps name → factory
   (see `tests/<topic>/conftest.py`).
+
+## Acceptance criteria and Definition of Done
+
+Every Linear ticket carries `## Acceptance criteria` (what this ticket must
+achieve, each item observable and testable) and the `## Definition of done`
+checklist (what every ticket of its kind must meet: tests per criterion, CI
+green, gotchas, TODOs resolved, conventional commit with
+`Refs: DSA-<n>`, merged to `main`). Rules and the full checklists:
+`docs/definition-of-done.md`. The templates in `.linear/templates/` contain both.
 
 ## TODO comments
 

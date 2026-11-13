@@ -19,6 +19,19 @@ coverage.xml
 # Claude Code user-local config
 .claude/settings.local.json
 
+# Personal notes
+docs/cache-control-docs.md
+docs/prompt-cache-keepalive.md
+.claude/skills/prompt-cache-control/
+img.png
+
+# personal herdr setup
+docs/herdr-workflow.md
+docs/dev-workflow.md
+
+# implementer <-> reviewer handoff notes (docs/agent-handoff.md)
+.handoff/
+
 # MCP server config (local IDE port)
 .mcp.json
 
