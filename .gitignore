@@ -19,6 +19,9 @@ coverage.xml
 # Claude Code user-local config
 .claude/settings.local.json
 
+# implementer <-> reviewer handoff notes (docs/agent-handoff.md)
+.handoff/
+
 # MCP server config (local IDE port)
 .mcp.json
 

@@ -49,6 +49,9 @@ file for IDs.
 - `agent-ready` means the spec is clear enough for an agent to implement.
 - `needs-human` means the issue requires human judgment (proofs, design, writing voice).
 - When an agent finishes work, it moves the issue to In Progress (no In Review state yet).
+- `/linear-work` orchestrates code changes: `dsa-implementer` writes, `dsa-reviewer`
+  reviews, messages pass through `.handoff/DSA-<n>/` (gitignored) until
+  `VERDICT: approve`. Contract: `docs/agent-handoff.md`.
 - Issue templates live in `.linear/templates/` — agents use them when creating issues.
 
 ### Project commands
