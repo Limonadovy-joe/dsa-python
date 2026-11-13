@@ -6,8 +6,9 @@
   the thing, not the problem (`dynamic_array.py`, not `leetcode_1046.py`).
 - Export the public names from the topic's `__init__.py` and list them in
   `__all__`. Anything not exported is private to the module.
-- Module docstring says what it is; class/function docstring states **complexity**
-  (time and space) for the main operations. That line is the point of the repo.
+- Docstrings are optional, on modules, classes and methods alike, public or
+  private. Write one only when it adds something the name and signature don't.
+  Complexity targets live in the ticket's acceptance criteria, not in docstrings.
 - Prefix helpers with `_`. No module-level mutable state, no printing, no input.
 - Fully annotated, `mypy --strict` clean. No bare `Any` in a public signature —
   if a container holds arbitrary elements it is **generic**, using PEP 695
