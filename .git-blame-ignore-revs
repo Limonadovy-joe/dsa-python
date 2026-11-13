@@ -2,6 +2,7 @@
 # GitHub reads this file on its own. Locally, once per clone:
 #   git config blame.ignoreRevsFile .git-blame-ignore-revs
 # One full 40-character commit hash per line, with a comment above it.
-
-# style: ruff format the whole repo (baseline, see docs/baseline.md)
-# <add the hash after that commit lands>
+#
+# Only list a commit that changes nothing but formatting or mechanical
+# rewrites (e.g. a repo-wide `ruff format`), merged on its own. Use the hash
+# as it lands on `main`: a squash merge creates a new one.
