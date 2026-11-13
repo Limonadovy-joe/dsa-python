@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypeVar, overload
+from typing import TYPE_CHECKING, overload
 
 from dsa.linked_lists.doubly_linked_list_node import DoublyLinkedListNode
 from utils.comparator.comparator import Comparator
@@ -9,8 +9,6 @@ if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
     from utils.comparator.comparator import ComparatorFunc
-
-T = TypeVar("T")
 
 
 class DoublyLinkedList[T]:

@@ -7,20 +7,13 @@ Complexity:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Optional, TypeVar
-
-if TYPE_CHECKING:
-    pass  # noqa: TC005
-
-T = TypeVar("T")
-
 
 class CircularArray[T]:
     _capacity: int
     _read_index: int
     _write_index: int
     _current_size: int
-    _slots: list[Optional[T]]  # noqa: UP045
+    _slots: list[T | None]
 
     def __init__(self, capacity: int = 16) -> None:
         self._capacity = capacity
@@ -36,9 +29,8 @@ class CircularArray[T]:
 
         self._slots[self._write_index] = item
         self._write_index = (self._write_index + 1) % self._capacity
-        return None  # noqa: PLR1711
 
-    def _read(self) -> Optional[T]:  # noqa: UP045
+    def _read(self) -> T | None:
         if self._current_size > 0:
             self._current_size = self._current_size - 1
 
@@ -47,13 +39,13 @@ class CircularArray[T]:
         self._read_index = (self._read_index + 1) % self._capacity
         return return_value
 
-    def peek(self) -> Optional[T]:  # noqa: UP045
+    def peek(self) -> T | None:
         return self._slots[self._read_index]
 
     def enqueue(self, item: T) -> None:
         self._write(item)
 
-    def deque(self) -> Optional[T]:  # noqa: UP045
+    def deque(self) -> T | None:
         return self._read()
 
     def size(self) -> int:

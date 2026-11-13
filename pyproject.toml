@@ -18,7 +18,6 @@ dev = [
     "coverage>=7.16.2",
     "matplotlib>=3.11.2",
     "mypy>=2.3.1",
-    "mypy-baseline>=0.7.4",
     "prek>=0.5.5",
     "pytest>=8.0",
     "ruff>=0.16.6",
@@ -28,8 +27,7 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q -m 'not performance'"
-# Baseline for known-failing tests (docs/baseline.md): an xfail that starts
-# passing fails the run, so the marker gets removed.
+# An xfail that starts passing fails the run, so stale markers get removed.
 xfail_strict = true
 markers = [
     "integration: crosses module boundaries",
@@ -66,7 +64,10 @@ ignore = [
 convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["D", "PLR2004"]   # docstrings and magic values are noise in tests; annotations still required (mypy strict covers tests too)
+# Tests: docstrings and magic values are noise; annotations are still required
+# (mypy strict covers tests too). pytest.mark.parametrize passes one positional
+# argument per table column, so the argument-count limits do not fit tests.
+"tests/**" = ["D", "PLR2004", "PLR0913", "PLR0917"]
 
 [tool.ruff.format]
 docstring-code-format = true

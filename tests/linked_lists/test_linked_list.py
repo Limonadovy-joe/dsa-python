@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-from collections.abc import Callable  # noqa: TC003
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 import pytest
 
 from dsa.linked_lists import LinkedList, LinkedListNode
-from utils.comparator.comparator import ComparatorFunc  # noqa: TC001
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
+    from utils.comparator.comparator import ComparatorFunc
 
 # ---------------------------------------------------------------------------
 # Utility functions
@@ -175,7 +178,7 @@ def test_custom_object_linked_list_initial_state(
         ([], [1, 2, 3], 1, 3, [1, 2, 3]),
     ],
 )
-def test_append(  # noqa: PLR0913, PLR0917
+def test_append(
     linked_list_factory: LinkedListFactory,
     initial_values: list[Any],
     values_to_append: list[Any],
@@ -265,7 +268,7 @@ def test_append_creates_a_distinct_node_per_call() -> None:
         ([], [1, 2, 3], 3, 1, [3, 2, 1]),
     ],
 )
-def test_prepend(  # noqa: PLR0913, PLR0917
+def test_prepend(
     linked_list_factory: LinkedListFactory,
     initial_values: list[Any],
     values_to_prepend: list[Any],
@@ -431,7 +434,14 @@ def filter_object_by_name(name: str) -> Callable[[dict[str, Any]], bool]:
 
 
 @pytest.mark.parametrize(
-    "initial_values, custom_comparator, value_to_find, expected_value, expected_head, expected_tail",  # noqa: E501
+    (
+        "initial_values",
+        "custom_comparator",
+        "value_to_find",
+        "expected_value",
+        "expected_head",
+        "expected_tail",
+    ),
     [
         # Find on empty list
         ([], None, 1, None, None, None),
@@ -455,7 +465,7 @@ def filter_object_by_name(name: str) -> Callable[[dict[str, Any]], bool]:
         ),
     ],
 )
-def test_find(  # noqa: PLR0913, PLR0917
+def test_find(
     linked_list_factory: LinkedListFactory,
     initial_values: list[Any],
     custom_comparator: ComparatorFunc[Any] | None,
@@ -538,7 +548,14 @@ def test_to_string(
 
 
 @pytest.mark.parametrize(
-    "input_values, value_to_delete, expected_deleted_value, expected_values, expected_head, expected_tail",  # noqa: E501
+    (
+        "input_values",
+        "value_to_delete",
+        "expected_deleted_value",
+        "expected_values",
+        "expected_head",
+        "expected_tail",
+    ),
     [
         # Delete from empty list
         ([], 1, None, [], None, None),
@@ -556,7 +573,7 @@ def test_to_string(
         ([1, 2, 3, 4], 5, None, [1, 2, 3, 4], 1, 4),
     ],
 )
-def test_delete(  # noqa: PLR0913, PLR0917
+def test_delete(
     linked_list_factory: LinkedListFactory,
     input_values: list[Any],
     value_to_delete: object,
