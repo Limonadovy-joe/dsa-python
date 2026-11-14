@@ -28,6 +28,7 @@ img.png
 # personal herdr setup
 docs/herdr-workflow.md
 docs/dev-workflow.md
+docs/core-commands.md
 
 # implementer <-> reviewer handoff notes (docs/agent-handoff.md)
 .handoff/
