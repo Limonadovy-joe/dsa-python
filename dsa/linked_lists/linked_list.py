@@ -7,7 +7,7 @@ from dsa.linked_lists.linked_list_node import LinkedListNode
 from utils.comparator.comparator import Comparator
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Iterator
 
     from utils.comparator.comparator import ComparatorFunc, EqualityComparator
 
@@ -26,12 +26,13 @@ class LinkedList[T]:
         return self.to_string()
 
     def __repr__(self) -> str:
-        items: list[T] = []
-        current = self.head
-        while current is not None:
-            items.append(current.value)
-            current = current.next
-        return f"LinkedList({items!r})"
+        return f"LinkedList({list(self)!r})"
+
+    def __iter__(self) -> Iterator[T]:
+        current_node = self.head
+        while current_node is not None:
+            yield current_node.value
+            current_node = current_node.next
 
     def to_string(self) -> str:
         output: list[str] = []
