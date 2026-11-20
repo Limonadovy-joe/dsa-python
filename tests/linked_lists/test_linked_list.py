@@ -448,9 +448,8 @@ def filter_object_by_name(name: str) -> Callable[[dict[str, Any]], bool]:
         ([], None, 1, None, None, None),
         # Find on populated list
         ([1, 2, 3], None, 2, 2, 1, 3),
-        # Find on populated list by callback
-        ([1, 2, 3], None, is_equal_to(2), 2, 1, 3),
-        ([1, 2], None, is_equal_to(3), None, 1, 2),
+        # Find a missing value
+        ([1, 2], None, 3, None, 1, 2),
         # Find using custom compare function with objects
         (
             [
@@ -459,7 +458,7 @@ def filter_object_by_name(name: str) -> Callable[[dict[str, Any]], bool]:
                 {"id": 3, "name": "Joe"},
             ],
             _compare_by_id,
-            filter_object_by_name("joe"),
+            {"id": 3, "name": "someone else"},
             {"id": 3, "name": "Joe"},
             {"id": 1, "name": "Alice"},
             {"id": 3, "name": "Joe"},
@@ -513,6 +512,110 @@ def test_find_node_by_means_of_custom_compare_function() -> None:
     assert node.value["custom_value"] == "test2"
 
     assert linked_list.find({"value": 2, "custom_value": "test5"}) is None
+
+
+def test_find_returns_the_first_match_as_a_live_node() -> None:
+    ll = LinkedList[int]().from_array([1, 2, 3, 2])
+
+    node = ll.find(2)
+
+    assert node is _nodes(ll)[1]
+    assert node is not None
+    assert node.next is _nodes(ll)[2]
+
+
+def test_find_searches_a_callable_value_without_calling_it() -> None:
+    calls: list[object] = []
+
+    def handler(value: object) -> bool:
+        calls.append(value)
+        return True
+
+    def other(value: object) -> bool:
+        return False
+
+    ll: LinkedList[Callable[[object], bool]] = LinkedList(
+        lambda a, b: 0 if a is b else 1
+    )
+    ll.from_array([other, handler])
+
+    node = ll.find(handler)
+
+    assert node is not None
+    assert node.value is handler
+    assert calls == []
+
+
+def test_find_stored_none_is_found_as_a_node() -> None:
+    ll = LinkedList[None]().from_array([None])
+
+    node = ll.find(None)
+
+    assert node is not None
+    assert node.value is None
+
+
+@pytest.mark.parametrize(
+    ("initial_values", "predicate", "expected_value"),
+    [
+        ([], is_equal_to(1), None),
+        ([1], is_equal_to(1), 1),
+        ([1, 2, 3], is_equal_to(2), 2),
+        ([1, 2], is_equal_to(3), None),
+        ([1, 2, 3, 4], lambda v: v % 2 == 0, 2),
+    ],
+)
+def test_find_if(
+    initial_values: list[int],
+    predicate: Callable[[int], bool],
+    expected_value: int | None,
+) -> None:
+    ll = LinkedList[int]().from_array(initial_values)
+
+    node = ll.find_if(predicate)
+
+    if expected_value is None:
+        assert node is None
+    else:
+        assert node is not None
+        assert node.value == expected_value
+    assert _values(ll) == initial_values
+
+
+def test_find_if_ignores_the_list_comparator() -> None:
+    people = [
+        {"id": 1, "name": "Alice"},
+        {"id": 2, "name": "Bob"},
+        {"id": 3, "name": "Joe"},
+    ]
+    ll = LinkedList[dict[str, Any]](_compare_by_id).from_array(people)
+
+    node = ll.find_if(filter_object_by_name("joe"))
+
+    assert node is not None
+    assert node.value is people[2]
+
+
+def test_find_if_returns_the_first_match_as_a_live_node() -> None:
+    ll = LinkedList[int]().from_array([5, 6, 7])
+
+    node = ll.find_if(lambda v: v > 5)
+
+    assert node is _nodes(ll)[1]
+
+
+def test_find_if_stops_at_the_first_match() -> None:
+    seen: list[int] = []
+
+    def is_two(value: int) -> bool:
+        seen.append(value)
+        return value == 2
+
+    ll = LinkedList[int]().from_array([1, 2, 3])
+
+    ll.find_if(is_two)
+
+    assert seen == [1, 2]
 
 
 @pytest.mark.parametrize(
@@ -841,28 +944,26 @@ def test_find_calls_equal_once_per_visited_node_with_target_first(
     assert counter.calls == expected_calls
 
 
-def test_find_with_predicate_never_calls_the_comparator() -> None:
+def test_find_if_never_calls_the_comparator() -> None:
     llist = _int_list([1, 2, 3])
     counter = _CountingEquality()
     llist.comparator = counter
 
-    node = llist.find(lambda value: value > 1)
+    node = llist.find_if(lambda value: value > 1)
 
     assert node is not None
     assert node.value == 2
     assert counter.calls == []
 
 
-@pytest.mark.parametrize(
-    "target",
-    [7, lambda value: value > 5],
-    ids=["value", "predicate"],
-)
-def test_find_returns_none_when_nothing_matches(
-    target: int | Callable[[int], bool],
-) -> None:
-    assert _int_list([1, 2, 3]).find(target) is None
-    assert _int_list([]).find(target) is None
+def test_find_returns_none_when_nothing_matches() -> None:
+    assert _int_list([1, 2, 3]).find(7) is None
+    assert _int_list([]).find(7) is None
+
+
+def test_find_if_returns_none_when_nothing_matches() -> None:
+    assert _int_list([1, 2, 3]).find_if(lambda value: value > 5) is None
+    assert _int_list([]).find_if(lambda value: value > 5) is None
 
 
 # ---------------------------------------------------------------------------
