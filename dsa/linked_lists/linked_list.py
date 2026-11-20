@@ -29,9 +29,13 @@ class LinkedList[T]:
         return f"LinkedList({list(self)!r})"
 
     def __iter__(self) -> Iterator[T]:
+        for node in self._iter_nodes():
+            yield node.value
+
+    def _iter_nodes(self) -> Iterator[LinkedListNode[T]]:
         current_node = self.head
         while current_node is not None:
-            yield current_node.value
+            yield current_node
             current_node = current_node.next
 
     def to_string(self) -> str:
@@ -65,33 +69,15 @@ class LinkedList[T]:
         self.head = new_head
         return self
 
-    # TODO(DSA-28): how to name a parameter that is either a value or a callback?
-    #   [Refactor | Linked Lists | Core | needs-human]
-    #
-    # TODO: profile find() and check the garbage collector
-    #   [Analysis | Linked Lists | Core | needs-human]
-    #   Check when functions and instances are created.
-    def find(
-        self, value_or_callback: T | Callable[[T], bool]
-    ) -> LinkedListNode[T] | None:
-        # Decide value vs predicate once, not per node: a searched value is
-        # bound as equal's first argument, leaving a one-argument predicate.
-        matches: Callable[[T], bool] = (
-            value_or_callback
-            if callable(value_or_callback)
-            else partial(self.comparator.equal, value_or_callback)
+    def find(self, value: T) -> LinkedListNode[T] | None:
+        return self.find_if(partial(self.comparator.equal, value))
+
+    def find_if(self, predicate: Callable[[T], bool]) -> LinkedListNode[T] | None:
+        return next(
+            (node for node in self._iter_nodes() if predicate(node.value)), None
         )
 
-        next_node = self.head
-        while next_node is not None:
-            if matches(next_node.value):
-                return next_node
-            next_node = next_node.next
-        return None
-
     def delete(self, value: T) -> LinkedListNode[T] | None:
-        # TODO(DSA-28): check naming conventions of returning nodes
-        #   [Refactor | Linked Lists | Core | needs-human]
         current_node = self.head
         prev_node = None
         node_to_return: LinkedListNode[T] | None = None

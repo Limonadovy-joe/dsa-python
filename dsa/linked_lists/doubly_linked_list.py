@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import partial
 from typing import TYPE_CHECKING, overload
 
 from dsa.linked_lists.doubly_linked_list_node import DoublyLinkedListNode
@@ -29,9 +30,13 @@ class DoublyLinkedList[T]:
         return f"DoublyLinkedList({items!r})"
 
     def __iter__(self) -> Iterator[T]:
+        for node in self._iter_nodes():
+            yield node.value
+
+    def _iter_nodes(self) -> Iterator[DoublyLinkedListNode[T]]:
         current_node = self.head
-        while current_node:
-            yield current_node.value
+        while current_node is not None:
+            yield current_node
             current_node = current_node.next
 
     @overload
@@ -69,6 +74,14 @@ class DoublyLinkedList[T]:
         new_node.link(self.head)
         self.head = new_node
         return self
+
+    def find(self, value: T) -> DoublyLinkedListNode[T] | None:
+        return self.find_if(partial(self.comparator.equal, value))
+
+    def find_if(self, predicate: Callable[[T], bool]) -> DoublyLinkedListNode[T] | None:
+        return next(
+            (node for node in self._iter_nodes() if predicate(node.value)), None
+        )
 
     # TODO(DSA-30): refactor delete_head to eliminate if statements
     #   [Refactor | Linked Lists | Core | agent-ready]

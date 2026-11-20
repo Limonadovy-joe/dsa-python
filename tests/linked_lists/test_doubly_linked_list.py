@@ -1,10 +1,16 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from itertools import pairwise
+from typing import TYPE_CHECKING
 
 import pytest
 
 from dsa.linked_lists import DoublyLinkedList, DoublyLinkedListNode
 from utils.comparator.comparator import Comparator
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 # ---------------------------------------------------------------------------
 # Utility functions
@@ -1436,3 +1442,114 @@ def test_comparator_accepts_any_object_with_equal() -> None:
     assert deleted is not None
     assert deleted.value == 2
     assert list(llist) == [1, 3]
+
+
+# ---------------------------------------------------------------------------
+# find / find_if
+# ---------------------------------------------------------------------------
+
+
+def test_find_on_empty_list_returns_none() -> None:
+    assert DoublyLinkedList[int]().find(1) is None
+
+
+def test_find_missing_value_returns_none() -> None:
+    assert _list_of(1, 2).find(3) is None
+
+
+def test_find_returns_the_first_match_as_a_live_node() -> None:
+    llist = _list_of(1, 2, 3, 2)
+
+    node = llist.find(2)
+
+    nodes = _nodes(llist)
+    assert node is nodes[1]
+    assert node.previous is nodes[0]
+    assert node.next is nodes[2]
+    _assert_well_formed(llist)
+
+
+def test_find_uses_the_list_comparator() -> None:
+    alice, bob = _User(1, "Alice"), _User(2, "Bob")
+    llist: DoublyLinkedList[_User] = DoublyLinkedList(_compare_by_id)
+    llist.append(alice).append(bob)
+
+    node = llist.find(_User(2, "someone else"))
+
+    assert node is not None
+    assert node.value is bob
+
+
+def test_find_searches_a_callable_value_without_calling_it() -> None:
+    calls: list[object] = []
+
+    def handler(value: object) -> bool:
+        calls.append(value)
+        return True
+
+    def other(value: object) -> bool:
+        return False
+
+    llist: DoublyLinkedList[Callable[[object], bool]] = DoublyLinkedList(
+        lambda a, b: 0 if a is b else 1
+    )
+    llist.append(other).append(handler)
+
+    node = llist.find(handler)
+
+    assert node is not None
+    assert node.value is handler
+    assert calls == []
+
+
+def test_find_stored_none_is_found_as_a_node() -> None:
+    node = _list_of(None).find(None)
+
+    assert node is not None
+    assert node.value is None
+
+
+@pytest.mark.parametrize(
+    ("values", "expected_index"),
+    [
+        ([], None),
+        ([2], 0),
+        ([1, 2, 3], 1),
+        ([1, 3], None),
+        ([1, 4, 6], 1),
+    ],
+)
+def test_find_if(values: list[int], expected_index: int | None) -> None:
+    llist = _list_of(*values)
+
+    node = llist.find_if(lambda v: v % 2 == 0)
+
+    if expected_index is None:
+        assert node is None
+    else:
+        assert node is _nodes(llist)[expected_index]
+    assert _values_forward(llist) == values
+    _assert_well_formed(llist)
+
+
+def test_find_if_ignores_the_list_comparator() -> None:
+    joe = _User(3, "Joe")
+    llist: DoublyLinkedList[_User] = DoublyLinkedList(_compare_by_id)
+    llist.append(_User(1, "Alice")).append(joe)
+
+    node = llist.find_if(lambda user: user.name.lower() == "joe")
+
+    assert node is not None
+    assert node.value is joe
+
+
+def test_find_if_stops_at_the_first_match() -> None:
+    seen: list[int] = []
+
+    def is_two(value: int) -> bool:
+        seen.append(value)
+        return value == 2
+
+    _list_of(1, 2, 3).find_if(is_two)
+
+    assert seen == [1, 2]
