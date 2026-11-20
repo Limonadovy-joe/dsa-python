@@ -43,6 +43,14 @@
 - DP: write the recurrence and base case in a comment before the loop. The loop
   order has to follow the dependency direction.
 
+## Linked lists (`dsa/linked_lists`)
+
+- Changing a `LinkedList` while iterating it is undefined. The iterator is lazy
+  and follows `.next` one node at a time, with no fail-fast check: an `append`
+  mid-loop is seen, a `delete` of the current node may end or skip the walk.
+- `x in linked_list` works through `__iter__`, so it compares with `==`, not
+  with the list's comparator. Use `find(x)` to honour a custom `compare_fun`.
+
 ## Comparator (`utils/comparator`)
 
 `Comparator.default_compare` is what `LinkedList`, `DoublyLinkedList` and

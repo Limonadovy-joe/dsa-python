@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import collections.abc
 from typing import TYPE_CHECKING, Any, Protocol
 
 import pytest
@@ -862,3 +863,120 @@ def test_find_returns_none_when_nothing_matches(
 ) -> None:
     assert _int_list([1, 2, 3]).find(target) is None
     assert _int_list([]).find(target) is None
+
+
+# ---------------------------------------------------------------------------
+# Iterator protocol (__iter__)
+# ---------------------------------------------------------------------------
+
+
+def test_iter_yields_values_head_to_tail() -> None:
+    llist = LinkedList[int]().from_array([1, 2, 3])
+
+    assert list(llist) == [1, 2, 3]
+    assert all(not isinstance(value, LinkedListNode) for value in llist)
+
+
+def test_iter_over_empty_list_yields_nothing() -> None:
+    assert list(LinkedList[int]()) == []
+    with pytest.raises(StopIteration):
+        next(iter(LinkedList[int]()))
+
+
+def test_iter_over_single_element_yields_it_then_stops() -> None:
+    it = iter(LinkedList[str]().append("a"))
+
+    assert next(it) == "a"
+    with pytest.raises(StopIteration):
+        next(it)
+
+
+def test_iter_yields_duplicates_and_falsy_values() -> None:
+    llist = LinkedList[object]().from_array([0, None, 0, ""])
+
+    assert list(llist) == [0, None, 0, ""]
+
+
+def test_iter_returns_independent_iterators() -> None:
+    llist = _int_list([1, 2, 3])
+    first, second = iter(llist), iter(llist)
+
+    pairs = [(next(first), next(second)) for _ in range(3)]
+
+    assert pairs == [(1, 1), (2, 2), (3, 3)]
+    assert list(llist) == list(llist) == [1, 2, 3]
+
+
+def _prepend_zero(llist: LinkedList[int]) -> None:
+    llist.prepend(0)
+
+
+def _delete_head(llist: LinkedList[int]) -> None:
+    llist.delete_head()
+
+
+def _delete_tail(llist: LinkedList[int]) -> None:
+    llist.delete_tail()
+
+
+def _delete_two(llist: LinkedList[int]) -> None:
+    llist.delete(2)
+
+
+def _reverse(llist: LinkedList[int]) -> None:
+    llist.reverse()
+
+
+@pytest.mark.parametrize(
+    ("mutate", "expected"),
+    [
+        (_prepend_zero, [0, 1, 2, 3]),
+        (_delete_head, [2, 3]),
+        (_delete_tail, [1, 2]),
+        (_delete_two, [1, 3]),
+        (_reverse, [3, 2, 1]),
+    ],
+    ids=["prepend", "delete_head", "delete_tail", "delete", "reverse"],
+)
+def test_iter_reflects_mutations_made_before_iter(
+    mutate: Callable[[LinkedList[int]], None], expected: list[int]
+) -> None:
+    llist = _int_list([1, 2, 3])
+
+    mutate(llist)
+
+    assert list(llist) == expected
+
+
+def test_iter_is_lazy_and_does_not_snapshot_the_list() -> None:
+    llist = _int_list([1, 2, 3])
+    it = iter(llist)
+
+    llist.append(4)
+
+    assert list(it) == [1, 2, 3, 4]
+
+
+def test_iter_does_not_change_the_list() -> None:
+    llist = _int_list([1, 2, 3])
+    head, tail, text = llist.head, llist.tail, llist.to_string()
+
+    for _ in llist:
+        pass
+
+    assert llist.head is head
+    assert llist.tail is tail
+    assert llist.to_string() == text
+
+
+def test_linked_list_is_iterable_and_its_iterator_returns_itself() -> None:
+    llist = LinkedList[int]()
+    it = iter(llist)
+
+    assert isinstance(llist, collections.abc.Iterable)
+    assert iter(it) is it
+
+
+def test_repr_goes_through_iter() -> None:
+    assert repr(LinkedList[object]().from_array([1, "a"])) == "LinkedList([1, 'a'])"
+    assert repr(LinkedList[int]()) == "LinkedList([])"
