@@ -20,7 +20,11 @@ from collections.abc import Callable, Iterator
 from typing import Protocol, cast
 
 from dsa.linked_lists import DoublyLinkedList, DoublyLinkedListNode
-from utils.comparator.comparator import Comparator, ComparatorFunc
+from utils.comparator.comparator import (
+    Comparator,
+    ComparatorFunc,
+    EqualityComparator,
+)
 
 
 class DequeStorage[T](Protocol):
@@ -110,7 +114,7 @@ class DequeCircularArray[T]:
     _front_index: int
     _back_index: int
     _current_size: int
-    _comparator: Comparator[T]
+    _comparator: EqualityComparator[T]
     _slots: list[T | None]
 
     def __init__(

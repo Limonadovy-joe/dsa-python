@@ -80,6 +80,19 @@ def _compare_fallback(x: object, y: object) -> int:
     return (x_id > y_id) - (x_id < y_id)
 
 
+class EqualityComparator[T](Protocol):
+    """Anything that answers whether two values are equal.
+
+    The containers type their comparator as this protocol, not as
+    :class:`Comparator`, so any object with a matching ``equal`` fits without
+    inheriting from it. ``T`` only appears in parameters, so PEP 695 infers it
+    contravariant: an ``EqualityComparator[object]`` fits where an
+    ``EqualityComparator[int]`` is expected.
+    """
+
+    def equal(self, x: T, y: T, /) -> bool: ...
+
+
 class Comparator[T]:
     """Three-way comparison of two values, ``-1`` / ``0`` / ``1``.
 

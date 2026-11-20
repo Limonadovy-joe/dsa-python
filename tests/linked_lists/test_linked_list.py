@@ -771,3 +771,94 @@ def test_repr_string_elements() -> None:
     llist.from_array(["a", "b", "c"])
 
     assert repr(llist) == "LinkedList(['a', 'b', 'c'])"
+
+
+class _ParityEquality:
+    """Has ``equal`` but does not inherit from ``Comparator``."""
+
+    def equal(self, x: int, y: int, /) -> bool:
+        return x % 2 == y % 2
+
+
+class _CountingEquality:
+    """Records every ``equal`` call; equality is plain ``==``."""
+
+    def __init__(self) -> None:
+        self.calls: list[tuple[int, int]] = []
+
+    def equal(self, x: int, y: int, /) -> bool:
+        self.calls.append((x, y))
+        return x == y
+
+
+def _int_list(values: list[int]) -> LinkedList[int]:
+    llist: LinkedList[int] = LinkedList()
+    for value in values:
+        llist.append(value)
+    return llist
+
+
+def test_find_uses_any_object_with_equal_as_comparator() -> None:
+    llist = _int_list([1, 2, 3])
+    llist.comparator = _ParityEquality()
+
+    node = llist.find(4)
+
+    assert node is not None
+    assert node.value == 2
+
+
+def test_delete_uses_any_object_with_equal_as_comparator() -> None:
+    llist = _int_list([1, 2, 3, 4])
+    llist.comparator = _ParityEquality()
+
+    deleted = llist.delete(6)
+
+    assert deleted is not None
+    assert deleted.value == 2
+    assert _values(llist) == [1, 3]
+
+
+@pytest.mark.parametrize(
+    ("values", "target", "expected_calls"),
+    [
+        ([], 1, []),
+        ([5], 5, [(5, 5)]),
+        ([1, 2, 3], 2, [(2, 1), (2, 2)]),
+        ([1, 2, 3], 9, [(9, 1), (9, 2), (9, 3)]),
+    ],
+)
+def test_find_calls_equal_once_per_visited_node_with_target_first(
+    values: list[int], target: int, expected_calls: list[tuple[int, int]]
+) -> None:
+    llist = _int_list(values)
+    counter = _CountingEquality()
+    llist.comparator = counter
+
+    llist.find(target)
+
+    assert counter.calls == expected_calls
+
+
+def test_find_with_predicate_never_calls_the_comparator() -> None:
+    llist = _int_list([1, 2, 3])
+    counter = _CountingEquality()
+    llist.comparator = counter
+
+    node = llist.find(lambda value: value > 1)
+
+    assert node is not None
+    assert node.value == 2
+    assert counter.calls == []
+
+
+@pytest.mark.parametrize(
+    "target",
+    [7, lambda value: value > 5],
+    ids=["value", "predicate"],
+)
+def test_find_returns_none_when_nothing_matches(
+    target: int | Callable[[int], bool],
+) -> None:
+    assert _int_list([1, 2, 3]).find(target) is None
+    assert _int_list([]).find(target) is None
