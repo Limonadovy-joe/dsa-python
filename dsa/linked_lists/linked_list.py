@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import partial
 from typing import TYPE_CHECKING
 
 from dsa.linked_lists.linked_list_node import LinkedListNode
@@ -8,15 +9,13 @@ from utils.comparator.comparator import Comparator
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from utils.comparator.comparator import ComparatorFunc
+    from utils.comparator.comparator import ComparatorFunc, EqualityComparator
 
 
 class LinkedList[T]:
     head: LinkedListNode[T] | None
     tail: LinkedListNode[T] | None
-    # TODO(DSA-27): comparator type should be an interface/ABC, not the class itself?
-    #   [Refactor | Linked Lists | Core | needs-human]
-    comparator: Comparator[T]
+    comparator: EqualityComparator[T]
 
     def __init__(self, compare_fun: ComparatorFunc[T] | None = None) -> None:
         self.head = None
@@ -74,19 +73,17 @@ class LinkedList[T]:
     def find(
         self, value_or_callback: T | Callable[[T], bool]
     ) -> LinkedListNode[T] | None:
+        # Decide value vs predicate once, not per node: a searched value is
+        # bound as equal's first argument, leaving a one-argument predicate.
+        matches: Callable[[T], bool] = (
+            value_or_callback
+            if callable(value_or_callback)
+            else partial(self.comparator.equal, value_or_callback)
+        )
+
         next_node = self.head
-
-        # TODO(DSA-27): curry comparator.equal so it takes only the actual value
-        #   [Refactor | Linked Lists | Core | needs-human]
-        #   and value_to_find is fixed.
-
         while next_node is not None:
-            actual_value = next_node.value
-
-            if callable(value_or_callback):
-                if value_or_callback(actual_value):
-                    return next_node
-            elif self.comparator.equal(value_or_callback, actual_value):
+            if matches(next_node.value):
                 return next_node
             next_node = next_node.next
         return None

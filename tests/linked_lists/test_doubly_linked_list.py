@@ -4,6 +4,7 @@ from itertools import pairwise
 import pytest
 
 from dsa.linked_lists import DoublyLinkedList, DoublyLinkedListNode
+from utils.comparator.comparator import Comparator
 
 # ---------------------------------------------------------------------------
 # Utility functions
@@ -102,6 +103,7 @@ def test_init_without_compare_fun_uses_default_comparison() -> None:
 def test_init_with_compare_fun_uses_it_for_equality() -> None:
     llist: DoublyLinkedList[_User] = DoublyLinkedList(_compare_by_id)
 
+    assert isinstance(llist.comparator, Comparator)
     assert llist.comparator.compare is _compare_by_id
     assert llist.comparator.equal(_User(1, "Alice"), _User(1, "Bob"))
     assert not llist.comparator.equal(_User(1, "Alice"), _User(2, "Alice"))
@@ -1414,3 +1416,23 @@ def test_repr_string_elements() -> None:
     llist.append("a").append("b").append("c")
 
     assert repr(llist) == "DoublyLinkedList(['a', 'b', 'c'])"
+
+
+class _ParityEquality:
+    """Has ``equal`` but does not inherit from ``Comparator``."""
+
+    def equal(self, x: int, y: int, /) -> bool:
+        return x % 2 == y % 2
+
+
+def test_comparator_accepts_any_object_with_equal() -> None:
+    llist: DoublyLinkedList[int] = DoublyLinkedList()
+    for value in (1, 2, 3, 4):
+        llist.append(value)
+    llist.comparator = _ParityEquality()
+
+    deleted = llist.delete(6)
+
+    assert deleted is not None
+    assert deleted.value == 2
+    assert list(llist) == [1, 3]

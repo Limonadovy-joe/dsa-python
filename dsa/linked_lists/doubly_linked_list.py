@@ -8,11 +8,11 @@ from utils.comparator.comparator import Comparator
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
-    from utils.comparator.comparator import ComparatorFunc
+    from utils.comparator.comparator import ComparatorFunc, EqualityComparator
 
 
 class DoublyLinkedList[T]:
-    comparator: Comparator[T]
+    comparator: EqualityComparator[T]
     head: DoublyLinkedListNode[T] | None
     tail: DoublyLinkedListNode[T] | None
 

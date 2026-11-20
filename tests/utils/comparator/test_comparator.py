@@ -4,7 +4,7 @@ from enum import IntEnum, StrEnum
 
 import pytest
 
-from utils.comparator.comparator import Comparator, Primitive
+from utils.comparator.comparator import Comparator, EqualityComparator, Primitive
 
 NAN = math.nan
 INF = math.inf
@@ -318,3 +318,12 @@ def test_default_compare_int_and_str_subclasses_compare_in_their_family(
 ) -> None:
     _assert_compares(x, y, expected)
     assert Comparator.default_compare(y, x) == -expected
+
+
+def test_comparator_satisfies_equality_comparator_protocol() -> None:
+    # mypy --strict checks this assignment: Comparator conforms structurally,
+    # without inheriting from the protocol and without a cast.
+    checker: EqualityComparator[int] = Comparator[int]()
+
+    assert checker.equal(1, 1)
+    assert not checker.equal(1, 2)
