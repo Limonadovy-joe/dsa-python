@@ -77,40 +77,37 @@ class LinkedList[T]:
             (node for node in self._iter_nodes() if predicate(node.value)), None
         )
 
-    def delete(self, value: T) -> LinkedListNode[T] | None:
-        current_node = self.head
+    def delete_if(self, predicate: Callable[[T], bool]) -> LinkedListNode[T] | None:
         prev_node = None
+        current_node = self.head
         node_to_return: LinkedListNode[T] | None = None
 
         while current_node is not None:
             next_node = current_node.next
-            if self.comparator.equal(current_node.value, value):
+            if predicate(current_node.value):
                 node_to_return = node_to_return or current_node
                 # check head
-                if self.head is not None and self.comparator.equal(
-                    self.head.value, current_node.value
-                ):
+                if prev_node is None:
+                    self.head = next_node
                     if next_node is None:
-                        self.head = None
-                        self.tail = self.head
-                    else:
-                        self.head = next_node
-                elif prev_node is not None:
-                    # check tail
-                    if next_node is None:
-                        prev_node.next = None
-                        self.tail = prev_node
-                    else:
-                        prev_node.next = next_node
-                current_node = next_node
+                        self.tail = None
+
+                # check tail
+                elif next_node is None:
+                    prev_node.next = None
+                    self.tail = prev_node
+                else:
+                    prev_node.next = next_node
+
+                current_node.next = None
             else:
                 prev_node = current_node
-                current_node = next_node
-
-        if node_to_return is not None:
-            node_to_return.next = None
+            current_node = next_node
 
         return node_to_return
+
+    def delete(self, value: T) -> LinkedListNode[T] | None:
+        return self.delete_if(partial(self.comparator.equal, value))
 
     def delete_tail(self) -> LinkedListNode[T] | None:
         current_node = self.head
