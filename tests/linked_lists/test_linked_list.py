@@ -618,6 +618,194 @@ def test_find_if_stops_at_the_first_match() -> None:
     assert seen == [1, 2]
 
 
+# ---------------------------------------------------------------------------
+# delete_if
+# ---------------------------------------------------------------------------
+def _assert_consistent_ends[T](llist: LinkedList[T]) -> None:
+    """``head is None`` iff ``tail is None``; ``tail`` is the last node."""
+    nodes = _nodes(llist)
+    if not nodes:
+        assert llist.head is None
+        assert llist.tail is None
+    else:
+        assert llist.head is nodes[0]
+        assert llist.tail is nodes[-1]
+        assert llist.tail.next is None
+
+
+def test_delete_if_removes_every_match_and_returns_the_first() -> None:
+    ll = LinkedList[int]().from_array([1, 2, 3, 4, 6])
+
+    node = ll.delete_if(lambda v: v % 2 == 0)
+
+    assert node is not None
+    assert node.value == 2
+    assert _values(ll) == [1, 3]
+    assert ll.tail is not None
+    assert ll.tail.value == 3
+    _assert_consistent_ends(ll)
+
+
+def test_delete_if_on_empty_list_returns_none_without_calling_predicate() -> None:
+    calls: list[int] = []
+
+    def predicate(value: int) -> bool:
+        calls.append(value)
+        return True
+
+    ll = LinkedList[int]()
+
+    assert ll.delete_if(predicate) is None
+    assert calls == []
+    _assert_consistent_ends(ll)
+
+
+def test_delete_if_single_matching_element_empties_the_list() -> None:
+    ll = LinkedList[int]().from_array([7])
+
+    node = ll.delete_if(is_equal_to(7))
+
+    assert node is not None
+    assert node.value == 7
+    assert ll.head is None
+    assert ll.tail is None
+
+
+def test_delete_if_single_non_matching_element_leaves_the_list_unchanged() -> None:
+    ll = LinkedList[int]().from_array([7])
+    only = ll.head
+
+    assert ll.delete_if(is_equal_to(8)) is None
+    assert ll.head is only
+    assert ll.tail is only
+    assert _values(ll) == [7]
+
+
+@pytest.mark.parametrize(
+    ("target", "expected_values"),
+    [(1, [2, 3]), (2, [1, 3]), (3, [1, 2])],
+    ids=["head", "middle", "tail"],
+)
+def test_delete_if_at_each_position(target: int, expected_values: list[int]) -> None:
+    ll = LinkedList[int]().from_array([1, 2, 3])
+    survivors = [n for n in _nodes(ll) if n.value != target]
+
+    node = ll.delete_if(is_equal_to(target))
+
+    assert node is not None
+    assert node.value == target
+    assert _values(ll) == expected_values
+    assert _nodes(ll) == survivors
+    assert ll.head is survivors[0]
+    assert ll.tail is survivors[-1]
+    _assert_consistent_ends(ll)
+
+
+def test_delete_if_all_match_empties_the_list() -> None:
+    ll = LinkedList[int]().from_array([1, 2, 3])
+    first = ll.head
+
+    node = ll.delete_if(lambda _: True)
+
+    assert node is first
+    assert ll.head is None
+    assert ll.tail is None
+
+
+def test_delete_if_no_match_returns_none_and_leaves_the_list_unchanged() -> None:
+    ll = LinkedList[int]().from_array([1, 2, 3])
+    before = _nodes(ll)
+
+    assert ll.delete_if(lambda _: False) is None
+    assert _nodes(ll) == before
+    assert _values(ll) == [1, 2, 3]
+    _assert_consistent_ends(ll)
+
+
+@pytest.mark.parametrize(
+    ("initial_values", "target"),
+    [([5], 5), ([5, 6, 7], 5), ([5, 6, 7], 6), ([5, 6, 7], 7), ([5, 6, 5], 5)],
+    ids=["only", "head", "middle", "tail", "duplicates"],
+)
+def test_delete_if_returns_a_detached_node(
+    initial_values: list[int], target: int
+) -> None:
+    ll = LinkedList[int]().from_array(initial_values)
+    first_match = _nodes(ll)[initial_values.index(target)]
+
+    node = ll.delete_if(is_equal_to(target))
+
+    assert node is first_match
+    assert node.next is None
+
+
+@pytest.mark.parametrize(
+    ("initial_values", "predicate"),
+    [
+        ([1, 2, 3, 4], lambda v: v % 2 == 0),
+        ([1, 2, 3], lambda _: True),
+        ([1, 2, 3], lambda _: False),
+        ([4, 4, 1, 4], is_equal_to(4)),
+    ],
+    ids=["some", "all", "none", "consecutive"],
+)
+def test_delete_if_calls_predicate_once_per_node_head_to_tail(
+    initial_values: list[int], predicate: Callable[[int], bool]
+) -> None:
+    seen: list[int] = []
+
+    def recording(value: int) -> bool:
+        seen.append(value)
+        return predicate(value)
+
+    ll = LinkedList[int]().from_array(initial_values)
+
+    ll.delete_if(recording)
+
+    assert seen == initial_values
+
+
+def test_delete_if_ignores_the_list_comparator() -> None:
+    alice = {"id": 1, "name": "A"}
+    bob = {"id": 1, "name": "B"}
+    ll = LinkedList[dict[str, Any]](_compare_by_id).from_array([alice, bob])
+
+    node = ll.delete_if(filter_object_by_name("B"))
+
+    assert node is not None
+    assert node.value is bob
+    assert ll.head is not None
+    assert ll.head.value is alice
+    assert ll.tail is ll.head
+    assert _values(ll) == [alice]
+
+
+def test_delete_if_never_calls_the_comparator() -> None:
+    llist = _int_list([1, 2, 3])
+    counter = _CountingEquality()
+    llist.comparator = counter
+
+    node = llist.delete_if(lambda value: value > 1)
+
+    assert node is not None
+    assert node.value == 2
+    assert _values(llist) == [1]
+    assert counter.calls == []
+
+
+def test_delete_still_honours_a_custom_compare_fun() -> None:
+    ll = LinkedList[dict[str, Any]](_compare_by_id).from_array(
+        [{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]
+    )
+
+    node = ll.delete({"id": 2, "name": "someone else"})
+
+    assert node is not None
+    assert node.value == {"id": 2, "name": "Bob"}
+    assert _values(ll) == [{"id": 1, "name": "Alice"}]
+    _assert_consistent_ends(ll)
+
+
 @pytest.mark.parametrize(
     "input_values, expected_values, expected_head, expected_tail",
     [
